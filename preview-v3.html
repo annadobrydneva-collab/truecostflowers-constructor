@@ -324,7 +324,7 @@ function duplicateFlower(f){
  flowers.push(clone);selected=clone.id;locked=true;lastTap={id:null,time:0};render();
 }
 stage.addEventListener('touchstart',e=>{
- if(e.target.closest('.editbar,.picker,.stagehead'))return;
+ if(e.target.closest('.editbar,.picker,.stagehead,#setupStage'))return;
  const handle=e.target.closest('.stemhandle');
  if(handle&&selected!==null){const f=flowers.find(x=>x.id===selected);if(f&&!f.noStem){touchEdit={f,stem:true,startY:e.touches[0].clientY,length:f.stemLength,moved:true};e.preventDefault();return}}
  if(selected!==null && e.touches.length>=2){
@@ -451,6 +451,23 @@ $('#flowBack').addEventListener('click',()=>showSetup(setupStep==='palette'?'for
 $('#flowCancel').addEventListener('click',()=>showSetup('editor'));
 $('#setupAgain').addEventListener('click',()=>showSetup('welcome'));
 $('#changePalette').addEventListener('click',()=>showSetup('palette'));
+// The editing stage has touch-action:none; explicitly support swiping its setup carousel.
+const formatCarousel=document.querySelector('.tcf-formats');
+let formatSwipe=null;
+formatCarousel.addEventListener('touchstart',e=>{
+ if(e.touches.length!==1)return;
+ formatSwipe={x:e.touches[0].clientX,scroll:formatCarousel.scrollLeft};
+},{passive:true});
+formatCarousel.addEventListener('touchmove',e=>{
+ if(!formatSwipe||e.touches.length!==1)return;
+ const dx=e.touches[0].clientX-formatSwipe.x;
+ if(Math.abs(dx)>5){
+  formatCarousel.scrollLeft=formatSwipe.scroll-dx;
+  e.preventDefault();
+ }
+},{passive:false});
+formatCarousel.addEventListener('touchend',()=>{formatSwipe=null},{passive:true});
+formatCarousel.addEventListener('touchcancel',()=>{formatSwipe=null},{passive:true});
 updateBudget();
 
 render();</script></body></html>
