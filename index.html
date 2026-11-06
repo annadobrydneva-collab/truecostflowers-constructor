@@ -392,21 +392,16 @@ function svg(d){return `<svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000
 function refreshCatalogIcons(){document.querySelectorAll('#catalog [data-i]').forEach(b=>{let i=Number(b.dataset.i),old=b.querySelector('svg');if(old&&data[i])old.outerHTML=svg(data[i]);});}
 refreshCatalogIcons();
 function add(idx){const d=data[idx],w=stage.clientWidth,h=stage.clientHeight;flowers.push({id:++next,idx,x:w/2+(Math.random()-.5)*95,y:h-210-Math.random()*90,angle:(Math.random()-.5)*32,scale:1,depth:1,noStem:true,stemLength:90});selected=next;locked=true;render()}
-/* v3.2-rc2: soft heart silhouette and close diagonal pairs,
-   and side draping. Keep the whole composition editable in 2D. */
+/* v3.2-rc3: heart silhouette; stable botanical ratios, interlaced colour patches,
+   diagonally clustered vertical stems, and no quantity-based scaling. */
 const floristRole={0:'accent',1:'focal',2:'focal',3:'foliage',4:'line',5:'accent',6:'mass',7:'trailing',8:'filler',9:'line'};
-const floristLayouts=[
- {peaks:[[.30,.235],[.70,.295]],accent:[[.70,.41],[.29,.44]],focal:[[.40,.49],[.63,.53]],mass:[[.22,.50],[.75,.53]],foliage:[[.26,.56],[.70,.56]],filler:[[.53,.61],[.39,.61]],trailing:[[.80,.64],[.18,.65]]},
- {peaks:[[.32,.29],[.70,.215]],accent:[[.30,.42],[.68,.40]],focal:[[.63,.49],[.41,.53]],mass:[[.74,.50],[.22,.52]],foliage:[[.71,.56],[.25,.57]],filler:[[.49,.61],[.63,.60]],trailing:[[.18,.65],[.81,.64]]},
- {peaks:[[.27,.25],[.73,.31]],accent:[[.69,.40],[.32,.42]],focal:[[.42,.51],[.62,.48]],mass:[[.23,.52],[.77,.50]],foliage:[[.25,.56],[.73,.58]],filler:[[.51,.62],[.37,.60]],trailing:[[.82,.66],[.19,.63]]},
- {peaks:[[.28,.30],[.68,.22]],accent:[[.32,.41],[.68,.42]],focal:[[.60,.50],[.40,.51]],mass:[[.75,.52],[.24,.50]],foliage:[[.73,.56],[.27,.56]],filler:[[.47,.60],[.61,.62]],trailing:[[.20,.64],[.79,.66]]},
- {peaks:[[.32,.24],[.74,.285]],accent:[[.69,.44],[.28,.41]],focal:[[.44,.50],[.64,.53]],mass:[[.26,.51],[.76,.51]],foliage:[[.26,.58],[.72,.56]],filler:[[.52,.61],[.39,.62]],trailing:[[.81,.65],[.18,.65]]}
-];
+/* Provisional relative ratios for the schematic artwork; physical 1:1 still
+   requires measured dimensions of each stem and final container. */
+const naturalFlowerScale=[.95,.90,1.02,.90,.96,.91,.95,.92,.86,.93];
 let autoArrangementSerial=0;
 function auto(record=true){
  if(record!==false)saveUndoState();
  if(!flowers.length){
-  // Keep the tested, budget-aware starter set from v3.1-rc4.
   const pairs=[[3,3],[8,8],[1,1],[9,9],[2,2]];
   const hasLimit=typeof flowMode!=='undefined'&&flowMode==='budget'&&budgetAmount>0;
   const allowance=hasLimit?Math.max(0,budgetAmount-serviceTariff(budgetAmount).fee):Infinity;
@@ -423,185 +418,106 @@ function auto(record=true){
  }
  const w=Math.max(280,stage.clientWidth),h=Math.max(380,stage.clientHeight);
  const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
- const layout=floristLayouts[autoArrangementSerial%floristLayouts.length];
- const variation=++autoArrangementSerial;
- const roleOrder={line:0,accent:1,focal:2,mass:3,foliage:4,filler:5,trailing:6};
- const depths={line:1,foliage:2,filler:3,accent:4,focal:5,mass:5.3,trailing:6};
- const scales={line:1.00,accent:.97,focal:1.02,mass:1.04,foliage:.92,filler:.84,trailing:.88};
- const radii={line:27,accent:34,focal:34,mass:37,foliage:33,filler:24,trailing:26};
- const crowd=clamp(1.00-Math.max(0,flowers.length-8)*.021,.59,1);
- const mobile=clamp(w/390,.85,1.04);
- // These points are a non-collinear staggered / triangular constellation.
- // The first two are diagonal, never a horizontal or vertical row.
- const clusters=[
-  [[0,0]],
-  [[-.48,-.36],[.48,.37]],
-  [[-.59,-.34],[.54,-.18],[-.03,.60]],
-  [[-.61,-.40],[.52,-.30],[-.40,.58],[.56,.56]],
-  [[-.65,-.36],[.43,-.56],[-.06,.19],[.70,.39],[-.40,.67]],
-  [[-.58,-.58],[.42,-.58],[-.03,.07],[-.65,.50],[.56,.48],[.03,.95]]
- ];
- const groups=new Map();
+ const variation=++autoArrangementSerial,mirror=variation%2===0;
+ const groups=new Map(),placed=[];
  flowers.forEach(f=>{if(!groups.has(f.idx))groups.set(f.idx,[]);groups.get(f.idx).push(f)});
- const ordered=[...groups.entries()].sort((a,b)=>(roleOrder[floristRole[a[0]]]-roleOrder[floristRole[b[0]]])||a[0]-b[0]);
- const lowVariety=groups.size<=2;
- const rolesSeen={};
- const placed=[];
- function silhouette(headY,role){
-  if(role==='trailing')return [w*.115,w*.885];
-  const t=clamp(headY/h,.20,.75);
-  // Two shoulders high up, a generous middle, narrower approach to the base.
-  const half=t<.35?.29+(t-.20)*.64:t<.52?.386-(t-.35)*.10:.369-(t-.52)*.49;
-  return [w*(.5-half),w*(.5+half)];
- }
- function trianglePoint(j,count){
-  if(count<=6)return clusters[count-1][j];
-  if(j<6)return clusters[5][j];
-  // Extra stems continue as irregular alternating triangular rings.
-  const k=j-6,ring=1+Math.floor(k/5),angle=(k*2.39996+variation*.25);
-  return [Math.cos(angle)*(.58+ring*.42),Math.sin(angle)*(.58+ring*.36)];
- }
- function placeOne(f,role,headX,headY,scale,angle,depth,idx){
-  const minHead=role==='line'?90:110;
-  const maxHead=role==='trailing'?h*.80:h*.705;
-  const y=clamp(headY,minHead,maxHead);
-  const [left,right]=silhouette(y,role);
-  f.scale=scale;
-  f.x=clamp(headX,Math.max(36,left),Math.min(w-36,right));
-  // The actual botanical flowerhead sits above the editing anchor.
-  f.y=clamp(y+70*scale,70*scale+55,h-104);
-  f.angle=clamp(angle,-38,38);
-  f.depth=depth;
-  // Never change the customer's stem length or visibility.
-  placed.push({f,idx,role,tx:f.x,ty:f.y,r:radii[role]*scale});
- }
-
- // One- and two-species compositions get small interleaved clusters placed on
- // two unequal shoulders, followed by staggered triangular patches towards base.
- if(lowVariety){
-  const sparseSlots=[
-   [.30,.245],[.69,.295],[.245,.427],[.735,.455],
-   [.51,.49],[.365,.570],[.655,.582],[.50,.645],
-   [.29,.54],[.71,.55],[.44,.375],[.58,.405]
-  ];
-  const queues=ordered.map(([idx,members])=>{
-   const sorted=[...members].sort((a,b)=>a.id-b.id),chunks=[];
-   if(sorted.length===2)chunks.push(sorted);
-   else if(sorted.length===4)chunks.push(sorted.slice(0,2),sorted.slice(2));
-   else for(let k=0;k<sorted.length;){
-    const left=sorted.length-k;
-    const take=left===4?2:Math.min(3,left);
-    chunks.push(sorted.slice(k,k+take));k+=take;
-   }
-   return {idx,role:floristRole[idx]||'filler',chunks};
-  });
-  const jobs=[],rounds=Math.max(...queues.map(q=>q.chunks.length));
-  for(let round=0;round<rounds;round++)
-   for(const q of queues)if(q.chunks[round])jobs.push({idx:q.idx,role:q.role,members:q.chunks[round]});
-  jobs.forEach((job,k)=>{
-   const base=sparseSlots[k%sparseSlots.length],ring=Math.floor(k/sparseSlots.length);
-   const mirrored=variation%2===0;
-   const cx=(mirrored?1-base[0]:base[0])*w+(ring%2?13:-12)*ring;
-   const cy=(base[1]-(job.role==='line'?.025:0))*h+ring*16;
-   const span=(job.role==='line'?52:job.role==='mass'?60:54)*crowd*mobile;
-   const count=job.members.length,spin=(((variation+k)%5)-2)*.095;
-   job.members.forEach((f,j)=>{
-    const point=trianglePoint(j,count);
-    const ox=(point[0]*Math.cos(spin)-point[1]*Math.sin(spin))*span;
-    const oy=(point[0]*Math.sin(spin)+point[1]*Math.cos(spin))*span;
-    const scale=clamp(scales[job.role]*crowd*mobile*(.96+Math.random()*.07),.49,1.10);
-    let hx=cx+ox+(Math.random()-.5)*4;
-    let hy=cy+oy+(Math.random()-.5)*4;
-    if(job.role==='trailing'){
-     hx=cx<w*.5?Math.min(hx,w*.245):Math.max(hx,w*.755);
-     hy=Math.max(hy,h*.60+j*9);
-    }
-    placeOne(f,job.role,hx,hy,scale,
-     (cx/w-.5)*28+point[0]*13+(Math.random()-.5)*9,
-     depths[job.role]+k*.014+j*.006,job.idx);
-   });
-  });
- }
- if(!lowVariety){
- for(const [idx,members] of ordered){
-  const role=floristRole[idx]||'filler';
-  const groupIndex=rolesSeen[role]||0;
-  rolesSeen[role]=groupIndex+1;
-  members.sort((a,b)=>a.id-b.id);
-  if(role==='line'&&groupIndex===0&&members.length>2){
-   // A pair of tall stems defines two UNEQUAL peaks, not a horizontal top row.
-   members.forEach((f,j)=>{
-    const peak=layout.peaks[j%2];
-    const extra=Math.floor(j/2);
-    const s=clamp(scales.line*crowd*mobile*(.97+Math.random()*.06),.51,1.04);
-    placeOne(f,role,
-      peak[0]*w+(j%2?extra*14:-extra*12)+(Math.random()-.5)*8,
-      peak[1]*h+extra*36+(Math.random()-.5)*9,s,
-      (j%2?12:-13)+(Math.random()-.5)*13,
-      depths.line+j*.012,idx);
-   });
-   continue;
+ const upright=[...groups.entries()].filter(([idx])=>floristRole[idx]==='line');
+ const other=[...groups.entries()].filter(([idx])=>floristRole[idx]!=='line');
+ // Staggered patch centers: upper unequal shoulders, broad middle and
+ // narrowing base. Patches intentionally mix towards the middle.
+ const patches=[
+  [.34,.29],[.63,.34],[.49,.44],[.29,.45],[.69,.48],
+  [.42,.57],[.60,.56],[.52,.32],[.36,.54],[.63,.61],
+  [.50,.52],[.30,.58],[.70,.56],[.49,.63],[.40,.38],
+  [.60,.42],[.31,.37],[.67,.40],[.51,.59],[.42,.47]
+ ];
+ // Non-collinear 2/3/4-stem figures, not horizontal or vertical rows.
+ const shape=[
+  [[0,0]],
+  [[-.48,-.34],[.43,.33]],
+  [[-.55,-.22],[.30,-.49],[.44,.46]],
+  [[-.52,-.33],[.42,-.49],[-.36,.51],[.52,.42]]
+ ];
+ const queues=other.map(([idx,members])=>{
+  const sorted=[...members].sort((a,b)=>a.id-b.id),chunks=[];
+  for(let k=0;k<sorted.length;){
+   const left=sorted.length-k,take=left===4?2:Math.min(3,left);
+   chunks.push(sorted.slice(k,k+take));k+=take;
   }
-  const anchors=role==='line'?layout.peaks:layout[role];
-  const center=anchors[groupIndex%anchors.length];
-  const band=Math.floor(groupIndex/anchors.length);
-  // Offset any extra groups diagonally instead of building new rows.
-  const cx=center[0]*w+band*(groupIndex%2?17:-19)+(Math.random()-.5)*11;
-  const cy=center[1]*h+band*20+(Math.random()-.5)*10;
-  const count=members.length;
-  const span=clamp((role==='mass'?66:role==='focal'?64:role==='accent'?61:role==='line'?61:58)*crowd*mobile,31,67);
-  const tilt=(((variation+idx)%4)-1.5)*.115;
+  return {idx,chunks};
+ });
+ const jobs=[],rounds=Math.max(0,...queues.map(q=>q.chunks.length));
+ for(let round=0;round<rounds;round++)
+  for(const q of queues)if(q.chunks[round])jobs.push({idx:q.idx,members:q.chunks[round]});
+ const compact=jobs.length<=3;
+ function place(f,role,hx,hy,angle,depth){
+  const size=naturalFlowerScale[f.idx]??.94;
+  f.scale=size;
+  const overspill=role==='trailing'?.12:.19;
+  const minY=role==='line'?98:110;
+  const maxY=role==='trailing'?h*.73:h*.69;
+  const headY=clamp(hy,minY,maxY);
+  f.x=clamp(hx,w*overspill,w*(1-overspill));
+  f.y=clamp(headY+70*size,114,h-103);
+  f.angle=clamp(angle,-35,35);f.depth=depth;
+  placed.push({f,role,tx:f.x,ty:f.y});
+ }
+ jobs.forEach(({idx,members},k)=>{
+  const role=floristRole[idx]||'filler',base=patches[(k+variation*2)%patches.length];
+  const slotX=mirror?1-base[0]:base[0];
+  const cx=(compact?.50+(slotX-.50)*.56:slotX)*w+(Math.random()-.5)*6;
+  const cy=(compact?.39+(base[1]-.39)*.73:base[1])*h+(Math.random()-.5)*7;
+  const span=role==='mass'?43:role==='focal'?40:role==='trailing'?34:37;
+  const tilt=((k+variation)%5-2)*.13;
   members.forEach((f,j)=>{
-   const p=trianglePoint(j,count);
-   const dx=(p[0]*Math.cos(tilt)-p[1]*Math.sin(tilt))*span;
-   const dy=(p[0]*Math.sin(tilt)+p[1]*Math.cos(tilt))*span;
-   const s=clamp(scales[role]*crowd*mobile*(.96+Math.random()*.085),.48,1.11);
-   let hx=cx+dx+(Math.random()-.5)*6;
-   let hy=cy+dy+(Math.random()-.5)*6;
-   if(role==='trailing'){
-    // Hang through and beyond the side contour of the basket/box/vase.
-    hx=center[0]<.5?Math.min(hx,w*.245):Math.max(hx,w*.755);
-    hy=Math.max(hy,h*.61+j*11);
-   }
-   placeOne(f,role,hx,hy,s,(center[0]-.5)*30+p[0]*18+(Math.random()-.5)*11,depths[role]+groupIndex*.10+j*.009,idx);
+   const point=shape[Math.min(members.length,4)-1][j]||[0,0];
+   const dx=(point[0]*Math.cos(tilt)-point[1]*Math.sin(tilt))*span;
+   const dy=(point[0]*Math.sin(tilt)+point[1]*Math.cos(tilt))*span;
+   let x=cx+dx+(Math.random()-.5)*4;
+   let y=cy+dy+(Math.random()-.5)*4;
+   if(role==='trailing'){x+=cx<w*.5?-12:12;y=Math.max(y,h*.54)}
+   place(f,role,x,y,(slotX-.5)*19+point[0]*9+(Math.random()-.5)*10,3+k*.035+j*.009);
   });
- }
- }
- // Resolve only visually disruptive head overlap. Keep triangular relationships
- // and the outer silhouette; don't shove every flower into a straight ring.
- for(let pass=0;pass<25;pass++){
-  for(let i=0;i<placed.length;i++){
-   const a=placed[i];
-   for(let j=i+1;j<placed.length;j++){
-    const b=placed[j];
-    const ax=a.f.x,ay=a.f.y-70*a.f.scale;
-    const bx=b.f.x,by=b.f.y-70*b.f.scale;
-    let dx=bx-ax,dy=by-ay,dist=Math.hypot(dx,dy);
-    if(dist<.001){const angle=(i*19+j*37)*2.399;dx=Math.cos(angle);dy=Math.sin(angle);dist=1}
-    const min=(a.r+b.r)*(a.idx===b.idx?.90:1.00);
-    if(dist>=min)continue;
-    const push=(min-dist)*.43,ux=dx/dist,uy=dy/dist;
-    const flexA=a.role==='line'?.43:1,flexB=b.role==='line'?.43:1;
-    a.f.x-=ux*push*flexA;a.f.y-=uy*push*flexA;
-    b.f.x+=ux*push*flexB;b.f.y+=uy*push*flexB;
-   }
+ });
+ // Delphinium, corylus, and ALL linear/upward materials: one compact
+ // irregular vertical "spine", never symmetrical horns on the two sides.
+ upright.forEach(([idx,members],kind)=>{
+  const sorted=[...members].sort((a,b)=>a.id-b.id);
+  const cx=w*(kind%2?.53:.47)+(mirror?7:-7);
+  const cy=h*(kind%2?.32:.27);
+  const constellation=[
+   [-.43,-.38],[.37,.24],[.04,-.80],[-.57,.50],
+   [.60,-.24],[.08,.78],[-.70,-.03],[.68,.50]
+  ];
+  sorted.forEach((f,j)=>{
+   const p=constellation[j%constellation.length],tier=Math.floor(j/constellation.length);
+   const x=cx+p[0]*51+(Math.random()-.5)*4+tier*7;
+   const y=cy+p[1]*43+(Math.random()-.5)*5+tier*18;
+   place(f,'line',x,y,p[0]*13+(Math.random()-.5)*10,1+kind*.10+j*.01);
+  });
+ });
+ // Gentle separation only for near-identical heads. Each pass returns
+ // toward the target patch, avoiding islands and an empty center.
+ for(let pass=0;pass<8;pass++){
+  for(let i=0;i<placed.length;i++)for(let j=i+1;j<placed.length;j++){
+   const a=placed[i],b=placed[j];
+   let dx=b.f.x-a.f.x,dy=(b.f.y-70*b.f.scale)-(a.f.y-70*a.f.scale);
+   let dist=Math.hypot(dx,dy);
+   if(dist<.01){dx=.1;dy=.1;dist=.1414}
+   const r=role=>role==='line'?17:role==='trailing'?20:role==='foliage'?24:29;
+   const min=(r(a.role)*a.f.scale+r(b.role)*b.f.scale)*.79;
+   if(dist>=min)continue;
+   const push=(min-dist)*.18,nx=dx/dist,ny=dy/dist;
+   const ma=a.role==='line'?.3:1,mb=b.role==='line'?.3:1;
+   a.f.x-=nx*push*ma;a.f.y-=ny*push*ma;
+   b.f.x+=nx*push*mb;b.f.y+=ny*push*mb;
   }
   for(const p of placed){
-   const head=p.f.y-70*p.f.scale;
-   const [left,right]=silhouette(head,p.role);
-   p.f.x=clamp(p.f.x+(p.tx-p.f.x)*.01,Math.max(35,left),Math.min(w-35,right));
-   p.f.y=clamp(p.f.y+(p.ty-p.f.y)*.01,115,h-104);
+   p.f.x=clamp(p.f.x+(p.tx-p.f.x)*.1,w*(p.role==='trailing'?.12:.19),w*(p.role==='trailing'?.88:.81));
+   p.f.y=clamp(p.f.y+(p.ty-p.f.y)*.1,114,h-103);
   }
  }
- // Reinforce the falling edge without making a solid vertical column.
- placed.filter(p=>p.role==='trailing').forEach(p=>{
-  if(p.tx<w*.5)p.f.x=Math.min(p.f.x,w*.25);
-  else p.f.x=Math.max(p.f.x,w*.75);
-  p.f.y=clamp(Math.max(p.f.y,h*.65),115,h-104);
- });
- selected=null;locked=false;
- $('#picker').classList.remove('show');
- render();
+ selected=null;locked=false;$('#picker').classList.remove('show');render();
 }
 
 function render(){stage.classList.toggle("locked",locked);layer.innerHTML='';let counts={};flowers.forEach((f,i)=>{counts[f.idx]=(counts[f.idx]||0)+1;let el=document.createElement('div');el.dataset.fid=String(f.id);el.className='stem'+(f.id===selected?' selected':'')+(f.noStem?' no-stem':'')+(f.flip?' flipped':'');el.style.cssText=`left:${f.x-55*f.scale}px;top:${f.y-115*f.scale}px;width:${110*f.scale}px;height:${132*f.scale}px;transform:rotate(${f.angle}deg);z-index:${210+f.depth*100}`;el.innerHTML=`<svg class="stemline" viewBox="0 0 110 132" preserveAspectRatio="none"><path d="M55 48 L55 ${48+(f.stemLength??90)}" stroke="#58714d" stroke-width="3" fill="none"/></svg><div class="flowerhead">${svg(data[f.idx])}</div><div class="stemhandle" aria-label="Потянуть стебель">✂</div><button type="button" class="flower-delete" title="Удалить этот цветок" aria-label="Удалить этот цветок">×</button>`;setupGesture(el,f);layer.appendChild(el)});$('#items').innerHTML=Object.entries(counts).map(([k,v])=>`<div class="item"><span>${data[k].n} × ${v}</span><span>${(data[k].p*v).toLocaleString('ru-RU')} ₽</span></div>`).join('')||'<p class="hint">Пока пусто. Добавь цветы из библиотеки.</p>';$('#total').textContent=flowers.reduce((a,f)=>a+data[f.idx].p,0).toLocaleString('ru-RU')+' ₽';$('#count').textContent=flowers.length+' стеблей';updateBar();updatePicker();updateBudget();updateFormatUI();updateUndoButton()}function renderSelectedOnly(){[...layer.children].forEach((el,i)=>el.classList.toggle('selected',flowers[i].id===selected));updateBar();updatePicker()}function updateBar(){let f=flowers.find(x=>x.id===selected);$('#editbar').classList.toggle('show',!!f);['backward','forward','stemToggle','deleteOne'].forEach(id=>$('#'+id).disabled=!f);if(f){$('#stemToggle').textContent=f.noStem?'＋ Стебель':'− Стебель';$('#stemToggle').classList.toggle('active',f.noStem)}}
