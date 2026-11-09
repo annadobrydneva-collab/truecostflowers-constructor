@@ -7,7 +7,7 @@
  */
 (function(root){
 'use strict';
-var VERSION='0.1.0';
+var VERSION='0.2.0';
 var ROLE={anthurium:'accent',ranunculus:'focal',peony:'focal',
  eucalyptus:'foliage',corylus:'branch',orchid2:'accent',dahlia2:'mass',
  amaranth2:'trailing',lisianthus:'filler',delphinium:'spike'};
@@ -17,14 +17,16 @@ function score(n){return Math.round(clamp(n,0,100));}
 function role(f,catalog){return ROLE[(catalog[f.idx]||{}).type]||'filler';}
 function copyLayout(flowers){return flowers.map(function(f){return Object.assign({},f);});}
 function enforceAutoDepth(flowers,catalog){
- var back=0,front=0;
+ var back=0,front=0,orchid=0;
  flowers.forEach(function(f){
   var r=role(f,catalog);
   if(r==='branch')f.depth=.12+(back++%80)*.001;
   else if(r==='spike')f.depth=.72+(back++%80)*.001;
  });
  flowers.forEach(function(f){
-  if((catalog[f.idx]||{}).type==='anthurium')f.depth=12+(front++%80)*.001;
+  var kind=(catalog[f.idx]||{}).type;
+  if(kind==='orchid2')f.depth=16+(orchid++%80)*.001;
+  else if(kind==='anthurium')f.depth=12+(front++%80)*.001;
  });
 }
 function evaluate(input){
@@ -51,7 +53,7 @@ function evaluate(input){
   }
   var coverage=clamp((main.length-2)/8,0,1);
   form-=coverage*12*(dist(.30,.245)+dist(.68,.305));
-  form-=coverage*Math.min(15,main.filter(function(e){return e.x>.435&&e.x<.565&&e.y<.39;}).length*5);
+  form-=coverage*Math.min(30,main.filter(function(e){return e.x>.38&&e.x<.62&&e.y<.47;}).length*9);
   form-=Math.min(24,main.filter(function(e){return e.x<.12||e.x>.88;}).length*4);
   form-=Math.min(14,main.filter(function(e){return e.y>.55&&(e.x<.24||e.x>.76);}).length*3);
  }
@@ -93,6 +95,10 @@ function evaluate(input){
   if(others.some(function(o){return anth.some(function(a){return a.f.depth<=o.f.depth;});}))roles-=25;
   if(anth.length===2&&(Math.abs(anth[0].x-anth[1].x)<.025||Math.abs(anth[0].y-anth[1].y)<.035))roles-=9;
  }
+ var orchids=entries.filter(function(e){return (catalog[e.f.idx]||{}).type==='orchid2';});
+ if(orchids.length&&entries.some(function(e){
+  return (catalog[e.f.idx]||{}).type!=='orchid2'&&orchids.some(function(o){return o.f.depth<=e.f.depth;});
+ }))roles-=35;
  var branches=entries.filter(function(e){return e.r==='branch';});
  if(branches.length){
   var roots=branches.map(function(e){
@@ -105,6 +111,10 @@ function evaluate(input){
  var spikes=entries.filter(function(e){return e.r==='spike';});
  if(main.length&&spikes.some(function(e){return main.some(function(p){return e.f.depth>=p.f.depth;});}))roles-=12;
  var trail=entries.filter(function(e){return e.r==='trailing';});
+ if(trail.length>=2&&trail.length<=3){
+  var span=Math.max.apply(null,trail.map(function(e){return e.x;}))-Math.min.apply(null,trail.map(function(e){return e.x;}));
+  if(span>.105||(trail.some(function(e){return e.x<.5;})&&trail.some(function(e){return e.x>.5;})))roles-=40;
+ }
  if(trail.length>=3){
   roles-=Math.min(20,trail.filter(function(e){return e.y<.37;}).length*8);
   var left=trail.filter(function(e){return e.x<.5;});
