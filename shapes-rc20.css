@@ -18,3 +18,16 @@
 @media(max-width:380px){
  .outside-toolbar .tcf-shape-picker button{min-width:66px;padding:6px 7px;font-size:10px}
 }
+
+/* v3.2-rc24: compact one-circle Form popover, outside horizontally clipped scroll. */
+.outside-toolbar .tcf-shape-drawer{position:relative;flex:0 0 44px;width:44px;height:44px;min-width:44px;z-index:25;overflow:visible}
+.outside-toolbar .tcf-shape-drawer>summary{list-style:none;display:flex;align-items:center;justify-content:center;width:44px;height:44px;min-height:44px;padding:0;border:1px solid #E0E3E7;border-radius:50%;background:#F9FAFB;color:#71535F;font-size:10px;font-weight:650;cursor:pointer;touch-action:manipulation}
+.outside-toolbar .tcf-shape-drawer>summary::-webkit-details-marker{display:none}
+.outside-toolbar .tcf-shape-drawer[open]>summary{background:#F1ECF0;border-color:#BCA8B2}
+.outside-toolbar .tcf-shape-popup{position:absolute;left:0;bottom:calc(100% + 11px);width:min(260px,calc(100vw - 24px));padding:12px;border:1px solid #E0E3E7;border-radius:17px;background:#FFF;box-shadow:0 8px 24px rgba(41,42,45,.14);display:flex;flex-direction:column;gap:7px;z-index:30}
+.outside-toolbar .tcf-shape-drawer:not([open])>.tcf-shape-popup{display:none!important}
+.outside-toolbar .tcf-shape-heading{margin:2px;font-size:11px;color:#747981;font-weight:600}
+.outside-toolbar .tcf-shape-popup button{display:block;width:100%;min-height:44px;flex:0 0 auto;padding:10px 12px;text-align:left;border:1px solid #E0E3E7;border-radius:12px;background:#F7F8FA;color:#292A2D;font-size:13px;font-weight:550;touch-action:manipulation}
+.outside-toolbar .tcf-shape-popup button[aria-pressed="true"]{border-color:#BFAAB5;background:#F4EEF1;color:#71535F;font-weight:650}
+.outside-toolbar .tcf-shape-note{margin:5px 2px 1px;color:#747981;font-size:10px;line-height:1.5}
+@media(max-width:380px){.outside-toolbar .tcf-shape-popup{left:-45px}}
