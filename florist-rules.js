@@ -7,7 +7,7 @@
  */
 (function(root){
 'use strict';
-var VERSION='0.2.0';
+var VERSION='0.3.0';
 var ROLE={anthurium:'accent',ranunculus:'focal',peony:'focal',
  eucalyptus:'foliage',corylus:'branch',orchid2:'accent',dahlia2:'mass',
  amaranth2:'trailing',lisianthus:'filler',delphinium:'spike'};
@@ -45,7 +45,21 @@ function evaluate(input){
  if(!main.length)main=faces;
  // Form: both uneven shoulders, readable center dip, narrowing towards base.
  var form=100;
- if(main.length){
+ if(input.shape==='round'){
+  // Round mode rewards a dome with a curved perimeter, NOT a heart notch.
+  if(main.length>=4){
+   function nearest(x,y){
+    var dist=2;
+    main.forEach(function(e){dist=Math.min(dist,Math.hypot((e.x-x)/.34,(e.y-y)/.26));});
+    return dist;
+   }
+   var hasContour=[[.5,.31],[.30,.42],[.70,.42],[.35,.55],[.65,.55]];
+   form-=hasContour.reduce(function(sum,p){return sum+Math.min(11,nearest(p[0],p[1])*10);},0);
+   form-=Math.min(20,main.filter(function(e){
+    return Math.hypot((e.x-.5)/.38,(e.y-.47)/.29)>1.14;
+   }).length*4);
+  }
+ }else if(main.length){
   function dist(targetX,targetY){
    var d=2;
    main.forEach(function(e){d=Math.min(d,Math.hypot((e.x-targetX)/.30,(e.y-targetY)/.26));});
