@@ -196,6 +196,20 @@ body.tcf-order-open{overflow:hidden}
  .tcf-order-card{padding:25px 16px 17px}
  .tcf-packaging-free{font-size:10px}
 }
+
+/* Selected flower has its own small unobtrusive delete cross on the frame. */
+#selectedFrameDelete{
+ opacity:.68!important;background:rgba(255,255,255,.92)!important;
+ color:#676C73!important;border:1px solid #DCE0E4!important;
+ width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important;
+ border-radius:50%!important;box-shadow:none!important;
+ font:500 21px/1 -apple-system,BlinkMacSystemFont,Arial,sans-serif!important;
+}
+#selectedFrameDelete:active{opacity:1!important;background:#FFFFFF!important}
+.selection-frame{
+ border:1px solid rgba(112,91,102,.35)!important;
+ box-shadow:none!important;border-radius:10px!important;
+}
 @media(prefers-reduced-motion:reduce){
  button,.tcf-packaging-toggle,.tcf-packaging-toggle::before{transition:none!important}
 }
