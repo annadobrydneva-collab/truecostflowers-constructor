@@ -675,7 +675,7 @@ const floristRoundStations=[
 ];
 function positionRoundPatches(jobs,w,h,flip,variant){
  jobs.forEach(({idx,flowers:members},k)=>{
-  let station=floristRoundStations[(k+variant%3)%floristRoundStations.length];
+  let station=floristRoundStations[k%floristRoundStations.length];
   if(jobs.length<=3){
    const small=[[[.50,.435]],[[.40,.425],[.61,.455]],[[.50,.34],[.32,.47],[.68,.49]]];
    station=small[jobs.length-1][k];
