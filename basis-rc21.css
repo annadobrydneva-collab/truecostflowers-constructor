@@ -1,0 +1,7 @@
+/* v3.2-rc21: 2 possible heights for the smaller boxes. */
+.panel.right .tcf-height-row{display:flex!important;align-items:center;gap:10px;border-color:#E0E3E7!important}
+.panel.right .tcf-height-row span{min-width:92px;color:#555B62;font-size:12px}
+#boxHeightSelector{appearance:auto;-webkit-appearance:menulist;cursor:pointer;min-height:39px;max-width:64%;padding:7px 9px;border:1px solid #DCE0E4;border-radius:11px;background:#F7F8FA;color:#292A2D;font-size:12px}
+#boxHeightSelector:focus-visible{outline:2px solid #71535F;outline-offset:2px}
+.panel.right .tcf-basis-note{color:#747981;font-size:11px;line-height:1.4}
+@media(max-width:380px){.panel.right .tcf-height-row span{min-width:76px}#boxHeightSelector{font-size:11px;max-width:67%}}
