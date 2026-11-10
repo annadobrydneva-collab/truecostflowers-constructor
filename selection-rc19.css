@@ -1,0 +1,5 @@
+/* v3.2-rc19: small visible head frame, no transparent capture. */
+#flowersLayer .stem.selected{outline:none!important;box-shadow:none!important}
+#selectionFrame.selection-frame{pointer-events:none!important;border:1px solid rgba(113,83,95,.48)!important;border-radius:13px!important;box-shadow:0 0 0 1px rgba(255,255,255,.72)!important}
+#selectedFrameDelete{pointer-events:auto!important;opacity:.7!important}
+.stage.locked #flowersLayer .stem:not(.selected){pointer-events:auto!important;opacity:1!important;filter:none!important}
