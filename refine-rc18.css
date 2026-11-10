@@ -1,0 +1,44 @@
+
+/* TrueCostFlowers LAB v3.2-rc18 — cool neutral flower library and delicate Apple-like headlines.
+   Only visual changes. The yellow vase and botanical illustrations are intentionally untouched. */
+#catalog,
+.panel.left #catalog{
+ background:#EEF0F2!important;
+ border:1px solid #E2E5E8!important;
+ border-radius:14px!important;
+}
+.panel.left #catalog .flower:nth-child(n){
+ background:#F9FAFB!important;
+ border:1px solid #E6E9EC!important;
+ border-radius:12px!important;
+ box-shadow:none!important;
+}
+.panel.left #catalog .flower:nth-child(2n){
+ background:#F3F5F7!important;
+}
+.panel.left #catalog .flower:hover,
+.panel.left #catalog .flower:focus-visible{
+ border-color:#B9A6B0!important;
+ background:#F6F3F5!important;
+}
+.panel.left h2,
+.panel.right h2{
+ font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif!important;
+ font-weight:300!important;
+ font-size:26px!important;
+ line-height:1.18!important;
+ letter-spacing:-.042em!important;
+ text-transform:none!important;
+ color:#292A2D!important;
+}
+@media(max-width:850px){
+ .panel.left h2,
+ .panel.right h2{
+  font-size:24px!important;
+  margin:5px 0 15px!important;
+ }
+}
+@media(max-width:380px){
+ .panel.left h2,
+ .panel.right h2{font-size:22px!important}
+}
