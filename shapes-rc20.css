@@ -1,0 +1,20 @@
+
+/* TrueCostFlowers LAB v3.2-rc20: shape switch stays below canvas. */
+.outside-toolbar .tcf-shape-picker{
+ display:flex;align-items:center;flex:0 0 auto;gap:3px;
+ padding:2px;border-radius:16px;background:#F0F2F4;
+ border:1px solid #E0E3E7;white-space:nowrap;
+}
+.outside-toolbar .tcf-shape-picker button{
+ min-height:38px;min-width:70px;padding:7px 9px;
+ border:1px solid transparent;border-radius:13px;
+ background:transparent;color:#61666C;font-size:11px;line-height:1.1;
+ font-weight:550;white-space:nowrap;touch-action:manipulation;
+}
+.outside-toolbar .tcf-shape-picker button[aria-pressed="true"]{
+ border-color:#C5B6BE;background:#FFF;
+ color:#71535F;font-weight:650;box-shadow:0 1px 3px #27304012;
+}
+@media(max-width:380px){
+ .outside-toolbar .tcf-shape-picker button{min-width:66px;padding:6px 7px;font-size:10px}
+}
