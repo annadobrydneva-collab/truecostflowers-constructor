@@ -523,7 +523,7 @@ body:not([data-setup="editor"]) .outside-toolbar{display:none!important}
  <div class="editbar" id="editbar"><button type="button" id="backward" title="На нижний слой" aria-label="На нижний слой"><svg viewBox="0 0 28 28" width="23" height="23" aria-hidden="true"><path d="M4 11 14 5 24 11 14 17Z" stroke="currentColor" stroke-width="1.7" fill="none"/><path d="M4 17 14 11 24 17 14 23Z" stroke="currentColor" stroke-width="1.7" fill="#5b4750"/></svg></button><button type="button" id="forward" title="На верхний слой" aria-label="На верхний слой"><svg viewBox="0 0 28 28" width="23" height="23" aria-hidden="true"><path d="M4 17 14 11 24 17 14 23Z" stroke="currentColor" stroke-width="1.7" fill="none"/><path d="M4 11 14 5 24 11 14 17Z" stroke="currentColor" stroke-width="1.7" fill="#5b4750"/></svg></button><button type="button" id="openPicker" title="Список слоёв" aria-label="Список слоёв"><svg viewBox="0 0 28 28" width="22" height="22" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.8" aria-hidden="true"><path d="M3 10 14 4l11 6-11 6Z"/><path d="m3 15 11 6 11-6"/><path d="m3 20 11 6 11-6"/></svg></button><button type="button" id="stemToggle">Стебель</button></div>
  </div>
  <div class="stage-floating-tools"><button type="button" class="stage-action stage-clear" id="clear" aria-label="Очистить все цветы" title="Очистить всё"><svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button><button type="button" class="stage-action stage-auto" id="auto" title="Собрать автоматически" aria-label="Собрать автоматически"><span class="stage-auto-symbol" aria-hidden="true">✦</span><span class="stage-auto-label" aria-hidden="true">Авто</span></button></div>
-</div><aside class="panel right"><h2>Моя композиция</h2><div id="items"></div><div class="total"><span>Промежуточный итог</span><span id="total">0 ₽</span></div><div id="budgetSummary" class="free" aria-live="polite"></div><button type="button" class="tcf-order-entry" id="orderDraftOpen">Оформить заявку</button><p class="tcf-order-caption">Предварительный расчёт · детали уточнит менеджер</p><p class="hint">Жесты: один палец — перемещение; два — масштаб и поворот головки; значок секатора у основания — изменение длины стебля; двойное касание — копия. При выборе цветок автоматически изолируется до касания свободного места. Коснись свободного места, чтобы снять выделение, затем выбери другой цветок. ☷ открывает список. Для перекрытых цветов используй кнопку «Выбрать». Это рабочий прототип механики, пока с иллюстративными цветами и тестовыми ценами. Для реалистичной версии заменим рисунки на отдельные PNG из нашей библиотеки.</p></aside></div><section id="tcfOrderPreview" role="dialog" aria-modal="true" aria-labelledby="tcfOrderTitle" hidden>
+</div><aside class="panel right"><h2>Моя композиция</h2><div id="items"></div><div class="total"><span>Промежуточный итог</span><span id="total">0 ₽</span></div><div id="budgetSummary" class="free" aria-live="polite"></div><button type="button" class="tcf-order-entry" id="orderDraftOpen">Оформить заявку</button><p class="tcf-order-caption">Предварительный расчёт · детали уточнит менеджер</p><p class="hint">Жесты: один палец — перемещение; два — масштаб и поворот головки; значок секатора — длина стебля; двойное касание — копия. Нажми прямо на другой цветок, чтобы переключить выделение; касание пустого поля снимает выбор. Форма «Круглая / Раскидистая» переключается в нижней панели без изменения состава. ☷ открывает список слоёв. Цены цветов тестовые, размеры основ пока не отображаются в масштабе 1:1; Oasis и доставка уточняются.</p></aside></div><section id="tcfOrderPreview" role="dialog" aria-modal="true" aria-labelledby="tcfOrderTitle" hidden>
  <div class="tcf-order-card">
   <button type="button" id="orderDraftClose" class="tcf-order-close" aria-label="Закрыть окно заявки" title="Закрыть">×</button>
   <p class="tcf-order-eyebrow">TrueCostFlowers · Предварительная заявка</p>
@@ -1261,11 +1261,30 @@ function serviceTariff(amount){
  if(amount<21000)return {fee:2750,label:'до 20 900 ₽'};
  return {fee:Math.round(amount*.20),label:'20% от бюджета'};
 }
+// Provided basis prices exclude Oasis. No interpolation across missing bands.
+function foundationPrice(kind,amount){
+ if(kind==='bouquet')return {fee:0,diameterCm:null,unpriced:false};
+ if(kind==='box'){
+  if(!(amount>0))return {fee:0,diameterCm:null,unpriced:true};
+  if(amount<10000)return {fee:1000,diameterCm:20,unpriced:false};
+  if(amount<20000)return {fee:1200,diameterCm:23,unpriced:false};
+  return {fee:2500,diameterCm:39,unpriced:false};
+ }
+ if(kind==='basket'){
+  if(amount>0&&amount<=10000)return {fee:1650,diameterCm:25,unpriced:false};
+  if(amount>=15000&&amount<=25000)return {fee:3250,diameterCm:36,unpriced:false};
+  if(amount>=30000&&amount<=50000)return {fee:4800,diameterCm:50,unpriced:false};
+  return {fee:0,diameterCm:null,unpriced:true};
+ }
+ return {fee:0,diameterCm:null,unpriced:true};
+}
 function quote(){
  const flowersTotal=flowers.reduce((sum,f)=>sum+data[f.idx].p,0);
  const basis=flowMode==='budget'?budgetAmount:flowersTotal;
  const service=(flowMode==='free'&&flowersTotal===0)?{fee:0,label:'после выбора цветов'}:serviceTariff(basis);
- return {flowersTotal,service,knownTotal:flowersTotal+service.fee,oasis:['basket','box','dish'].includes(formatChoice)};
+ const foundation=foundationPrice(formatChoice,basis);
+ return {flowersTotal,service,foundation,knownTotal:flowersTotal+service.fee+foundation.fee,
+  oasis:['basket','box','dish'].includes(formatChoice)};
 }
 function updateBudget(){
  const summary=$('#budgetSummary'),q=quote();
@@ -1280,20 +1299,30 @@ function updateBudget(){
    items.insertAdjacentHTML('beforeend',
     '<label class="item tcf-charge tcf-packaging-row" for="bouquetPackagingToggle"><span class="tcf-packaging-copy"><strong>Упаковка букета</strong><small>Входит в услугу сервиса</small></span><span class="tcf-packaging-right"><span class="tcf-packaging-free">Без доплаты</span><input id="bouquetPackagingToggle" class="tcf-packaging-toggle" type="checkbox" aria-label="Добавить упаковку букета" '+(bouquetPackaging?'checked':'')+'></span></label>');
   }else if(formatChoice!=='other'){
-   items.insertAdjacentHTML('beforeend','<div class="item tcf-charge tcf-unpriced"><span>'+baseNames[formatChoice]+'</span><span>Цена уточняется</span></div>');
+   const name=baseNames[formatChoice]+(formatChoice==='basket'?' белая с ручкой':'');
+   if(q.foundation.unpriced){
+    items.insertAdjacentHTML('beforeend','<div class="item tcf-charge tcf-unpriced"><span>'+name+'</span><span>Размер и цена уточняются</span></div>');
+   }else{
+    items.insertAdjacentHTML('beforeend','<div class="item tcf-charge"><span>'+name+' · Ø '+q.foundation.diameterCm+' см</span><span>'+money(q.foundation.fee)+'</span></div>');
+   }
   }
   if(q.oasis)items.insertAdjacentHTML('beforeend','<div class="item tcf-charge tcf-unpriced"><span>Oasis · для '+(formatChoice==='basket'?'корзины':formatChoice==='dish'?'плошки':'коробки')+'</span><span>Размер и цена уточняются</span></div>');
  }
  $('#total').textContent=money(q.knownTotal);
  summary.classList.toggle('over',flowMode==='budget'&&q.knownTotal>budgetAmount);
  summary.classList.toggle('free',flowMode!=='budget');
- const caution='Предварительно: цены цветов тестовые; стоимость основы, Oasis и доставки пока не учтена.';
+ const awaiting=[];
+ if(q.foundation.unpriced)awaiting.push('основа');
+ if(q.oasis)awaiting.push('Oasis');
+ awaiting.push('доставка');
+ const caution='Предварительно: цены цветов тестовые; не учтены: '+awaiting.join(', ')+'.';
+ const foundationInfo=q.foundation.fee?' · основа: '+money(q.foundation.fee):'';
  const gap=q.service.gap?' Тариф 3 501–3 599 ₽ уточняется.':'';
  if(flowMode==='budget'){
   const left=budgetAmount-q.knownTotal;
-  summary.innerHTML='<span>Бюджет: '+money(budgetAmount)+'</span><b>'+(left>=0?'Осталось: '+money(left):'Превышение: '+money(-left))+'</b><small>Цветы: '+money(q.flowersTotal)+' · сервис: '+money(q.service.fee)+'. '+caution+gap+'</small>';
+  summary.innerHTML='<span>Бюджет: '+money(budgetAmount)+'</span><b>'+(left>=0?'Осталось: '+money(left):'Превышение: '+money(-left))+'</b><small>Цветы: '+money(q.flowersTotal)+' · сервис: '+money(q.service.fee)+foundationInfo+'. '+caution+gap+'</small>';
  }else{
-  summary.innerHTML='<span>Свободная сумма</span><b>Итого с сервисом: '+money(q.knownTotal)+'</b><small>Цветы: '+money(q.flowersTotal)+' · сервис: '+money(q.service.fee)+'. Порог услуги определяется текущей стоимостью цветов. '+caution+gap+'</small>';
+  summary.innerHTML='<span>Свободная сумма</span><b>Итого с сервисом: '+money(q.knownTotal)+'</b><small>Цветы: '+money(q.flowersTotal)+' · сервис: '+money(q.service.fee)+foundationInfo+'. Порог услуги определяется текущей стоимостью цветов. '+caution+gap+'</small>';
  }
 }
 function showSetup(step){
@@ -1392,8 +1421,12 @@ const orderDialog=$('#tcfOrderPreview'),orderOpen=$('#orderDraftOpen'),orderClos
 function openDraftOrder(){
  if(!flowers.length)return;
  const q=quote(),basis=shortFormatNames[formatChoice]||'Композиция';
+ const missing=[];
+ if(q.foundation.unpriced)missing.push('основы');
+ if(q.oasis)missing.push('Oasis');
+ missing.push('доставки');
  $('#orderDraftSummary').textContent=basis+' · '+flowers.length+' стеблей · '+money(q.knownTotal)+
-  ' (предварительно, без неподтверждённых стоимости основы, Oasis и доставки)';
+  ' (предварительно, без стоимости '+missing.join(', ')+')';
  $('#orderReferenceConsent').checked=false;
  $('#orderPrivacyConsent').checked=false;
  $('#orderPhone').value='';
