@@ -54,7 +54,8 @@ function evaluate(input){
     return dist;
    }
    var hasContour=[[.5,.31],[.30,.42],[.70,.42],[.35,.55],[.65,.55]];
-   form-=hasContour.reduce(function(sum,p){return sum+Math.min(11,nearest(p[0],p[1])*10);},0);
+   form-=hasContour.reduce(function(sum,p){return sum+Math.min(9,nearest(p[0],p[1])*8);},0);
+   form-=Math.min(22,nearest(.50,.48)*22); // circular core coverage
    form-=Math.min(20,main.filter(function(e){
     return Math.hypot((e.x-.5)/.38,(e.y-.47)/.29)>1.14;
    }).length*4);
