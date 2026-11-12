@@ -31,3 +31,29 @@
 .outside-toolbar .tcf-shape-popup button[aria-pressed="true"]{border-color:#BFAAB5;background:#F4EEF1;color:#71535F;font-weight:650}
 .outside-toolbar .tcf-shape-note{margin:5px 2px 1px;color:#747981;font-size:10px;line-height:1.5}
 @media(max-width:380px){.outside-toolbar .tcf-shape-popup{left:-45px}}
+
+/* v3.2-rc27 — iPhone: the Form popup must paint ABOVE the composition.
+   z-index on the popup alone cannot escape the 10-level toolbar context. */
+.app > .outside-toolbar.tcf-shape-menu-open,
+.app > .outside-toolbar:has(#shapeDrawer[open]){
+ position:relative!important;z-index:10000!important;overflow:visible!important;
+}
+.app > .outside-toolbar.tcf-shape-menu-open #shapeDrawer,
+.app > .outside-toolbar:has(#shapeDrawer[open]) #shapeDrawer{
+ z-index:10001!important;
+}
+.app > .outside-toolbar .tcf-shape-drawer[open] > .tcf-shape-popup{
+ z-index:10002!important;
+ background:rgba(249,250,252,.90)!important;
+ -webkit-backdrop-filter:blur(15px) saturate(110%);
+ backdrop-filter:blur(15px) saturate(110%);
+ border:1px solid rgba(207,211,219,.9);
+ box-shadow:0 10px 32px rgba(45,41,50,.16);
+}
+/* Subtle glass styling, never dim the actual labels/buttons. */
+.app > .outside-toolbar .tcf-shape-drawer[open] .tcf-shape-popup button{
+ background:rgba(255,255,255,.74);
+}
+.app > .outside-toolbar .tcf-shape-drawer[open] .tcf-shape-popup button[aria-pressed="true"]{
+ background:rgba(238,228,235,.86);
+}
