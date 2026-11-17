@@ -7,10 +7,10 @@
  */
 (function(root){
 'use strict';
-var VERSION='0.3.0';
+var VERSION='0.4.0';
 var ROLE={anthurium:'accent',ranunculus:'focal',peony:'focal',
  eucalyptus:'foliage',corylus:'branch',orchid2:'accent',dahlia2:'mass',
- amaranth2:'trailing',lisianthus:'filler',delphinium:'spike'};
+ amaranth2:'trailing',lisianthus:'filler',delphinium:'spike',hydrangea:'mass'};
 function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
 function mean(a){return a.length?a.reduce(function(s,n){return s+n;},0)/a.length:0;}
 function score(n){return Math.round(clamp(n,0,100));}
