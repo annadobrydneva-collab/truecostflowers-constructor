@@ -795,7 +795,7 @@ body[data-setup="editor"] .tcf-stage-swipe-cue{display:block}
  letter-spacing:.015em!important;color:#745f6b!important;opacity:.92!important;
  pointer-events:none!important;white-space:nowrap!important;z-index:1300!important
 }
-.tcf-stage-swipe-cue[hidden]{display:none!important}
+.tcf-stage-swipe-cue small[hidden]{display:none!important}
 @media(max-width:380px){
  #catalog{grid-auto-rows:112px!important;column-gap:5px!important}
  #catalog .flower .tcf-catalog-main svg{width:38px!important;height:40px!important}
@@ -2216,8 +2216,8 @@ let basisSwipeHintSeen=false;
 function acknowledgeBasisSwipe(){
  if(basisSwipeHintSeen)return;
  basisSwipeHintSeen=true;
- const cue=document.querySelector('.tcf-stage-swipe-cue');
- if(cue)cue.hidden=true;
+ const text=document.querySelector('.tcf-stage-swipe-cue small');
+ if(text)text.hidden=true; // Keep the subtle side arrows; dismiss only the one-time words.
 }
 const formatCarousel=document.querySelector('.tcf-formats');
 let formatSwipe=null;
