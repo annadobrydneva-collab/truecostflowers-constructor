@@ -887,7 +887,7 @@ body[data-setup="editor"] .tcf-stage-swipe-cue{display:block}
  </div>
 </div>
 <div class="vase"></div><div class="base-alt" aria-hidden="true"></div><svg id="tcfSpiralStems" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg><div id="flowersLayer"></div>
-<div class="tcf-stage-swipe-cue" aria-hidden="true">
+<div class="tcf-stage-swipe-cue">
  <button type="button" class="tcf-swipe-left" id="tcfBasisArrowLeft" aria-label="Предыдущий тип композиции">‹</button><small>Свайп по пустому полю — другой тип</small><button type="button" class="tcf-swipe-right" id="tcfBasisArrowRight" aria-label="Следующий тип композиции">›</button>
 </div><div class="tcf-cut-ribbon" aria-hidden="true"></div><div id="selectionFrame" class="selection-frame"><button type="button" id="selectedFrameDelete" aria-label="Удалить выбранный цветок" title="Удалить этот цветок">×</button></div><div class="picker" id="picker"></div><div class="bottom">Касание — выбор · Два пальца — размер головки · ✂ — длина стебля</div><div id="setupStage" aria-live="polite"><div class="tcf-stage-panel">
 <div class="tcf-panel-head"><button type="button" id="flowBack" class="tcf-textbtn" aria-label="Назад">← Назад</button><button type="button" id="flowCancel" class="tcf-textbtn" hidden>Закрыть ×</button></div>
@@ -1013,7 +1013,7 @@ const hydrangeaColors={
  blue:{name:'Голубая',hex:'#a1cbe5'}
 };
 const hydrangeaColorKeys=Object.keys(hydrangeaColors);
-let hydrangeaTone=null,floralBase='later',floralReviewAccepted=false,pendingBaseChoice=null;
+let hydrangeaTone=null,floralBase='later',floralReviewAccepted=false,pendingBaseChoice=null,pendingHydrangeaAdd=false;
 function hydrangeaTint(ordinal=0){
  if(!hydrangeaTone)return '#d8d3d3';
  const key=hydrangeaTone==='mix'?hydrangeaColorKeys[ordinal%hydrangeaColorKeys.length]:hydrangeaTone;
@@ -1184,13 +1184,13 @@ function updateCatalogCounters(counts){
  });
 }
 // A round composition must be recalculated when inventory changes, not just on Auto.
-function openHydrangeaPalette(mode=null){
- pendingBaseChoice=mode;
+function openHydrangeaPalette(mode=null,addAfterColor=false){
+ pendingBaseChoice=mode;pendingHydrangeaAdd=addAfterColor;
  $('#tcfHydrangeaPalette').hidden=false;
  $('#tcfHydrangeaPalette').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function closeHydrangeaPalette(){
- $('#tcfHydrangeaPalette').hidden=true;pendingBaseChoice=null;
+ $('#tcfHydrangeaPalette').hidden=true;pendingBaseChoice=null;pendingHydrangeaAdd=false;
 }
 $('#tcfHydrangeaPaletteClose').onclick=closeHydrangeaPalette;
 $('#tcfHydrangeaPalette').addEventListener('click',event=>{
@@ -1201,10 +1201,13 @@ $('#tcfHydrangeaPalette').addEventListener('click',event=>{
  saveUndoState();hydrangeaTone=tone;
  // Explicit recoloring applies to the existing hydrangea group at once.
  let i=0;flowers.forEach(f=>{if(f.idx===10)f.tint=hydrangeaTint(i++)});
- const requested=pendingBaseChoice;
+ const requested=pendingBaseChoice,shouldAdd=pendingHydrangeaAdd;
  closeHydrangeaPalette();
  if(requested)applyFloristBase(requested);
- else render();
+ else if(shouldAdd){
+  add(10);
+  if(compositionShape==='round')auto(false);
+ }else render();
 });
 $('#catalog').addEventListener('click',event=>{
  if(event.target.closest('.tcf-hydrangea-color-open')){event.preventDefault();openHydrangeaPalette();return}
@@ -1766,11 +1769,18 @@ $('#catalog').onclick=e=>{
   if(!card)return;
   const idx=Number(card.dataset.i);
   if(op.dataset.catalogOp==='minus')removeOneSpecies(idx);
-  else if(op.dataset.catalogOp==='plus'){saveUndoState();add(idx);if(compositionShape==='round')auto(false)}
+  else if(op.dataset.catalogOp==='plus'){
+   if(idx===10&&!hydrangeaTone){openHydrangeaPalette(null,true);return}
+   saveUndoState();add(idx);if(compositionShape==='round')auto(false)
+  }
   return;
  }
  const addButton=e.target.closest('.tcf-catalog-main');
- if(addButton){const card=addButton.closest('.tcf-catalog-card');if(card){saveUndoState();add(Number(card.dataset.i));if(compositionShape==='round')auto(false)}}
+ if(addButton){const card=addButton.closest('.tcf-catalog-card');if(card){
+   const idx=Number(card.dataset.i);
+   if(idx===10&&!hydrangeaTone){openHydrangeaPalette(null,true);return}
+   saveUndoState();add(idx);if(compositionShape==='round')auto(false)
+  }}
 };$('#auto').onclick=auto;
 /* Keep button taps out of the stage's pinch/drag event stream in iOS Safari. */
 document.querySelectorAll('.stage-action,.stage-formatbar,.stage-mini').forEach(control=>
