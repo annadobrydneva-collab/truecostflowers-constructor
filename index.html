@@ -1069,6 +1069,10 @@ function roundDomeSlots(n,w,h,baseTop,baseWidth,flip=false,variant=2){
  const domeHeight=Math.min(h*.29,Math.max(100,baseWidth*.92));
  const top=Math.max(91,baseTop-domeHeight);
  const bottom=Math.min(h-110,baseTop-31);
+ if(n===2){
+  const y=top+(bottom-top)*.54;
+  return [{x:w*(flip?.61:.39),headY:y},{x:w*(flip?.39:.61),headY:y+5}];
+ }
  const rows=Math.max(1,Math.ceil((Math.sqrt(8*n+1)-1)/2));
  const sum=rows*(rows+1)/2;
  const counts=Array.from({length:rows},(_,i)=>Math.max(1,Math.floor(n*(i+1)/sum)));
