@@ -869,6 +869,13 @@ body:not([data-setup="editor"]) .app>#tcfFloralBase{display:none!important}
 .stage .tcf-over-popup{z-index:25000!important;top:35%!important;max-height:55%;
  overflow-y:auto;background:rgba(252,250,251,.97)!important}
 .tcf-shape-popup button[aria-pressed="true"]{background:#f5e8f0!important;border-color:#bba5b4!important}
+
+/* RC42: no selection may jump in front of another painted bloom merely because
+   it is active; preserve actual layer ordering and painted targets when locked.
+   Touch/pen/mouse selection can now switch to any exposed neighbouring head. */
+.stage.locked .stem.selected{z-index:var(--flower-depth)!important}
+.stage.locked .stem:not(.selected) svg *{pointer-events:visiblePainted!important}
+.stage.locked .stem:not(.selected){pointer-events:none!important}
 </style><link rel="stylesheet" href="visual-rc16.css?v=3.2-rc16"/><link rel="stylesheet" href="order-rc17.css?v=3.2-rc17"/><link rel="stylesheet" href="refine-rc18.css?v=3.2-rc18"/><link rel="stylesheet" href="selection-rc19.css?v=3.2-rc19"/><link rel="stylesheet" href="shapes-rc20.css?v=3.2-rc27"/><link rel="stylesheet" href="basis-rc21.css?v=3.2-rc21"/></head><body data-setup="welcome"><section id="tcfWelcome" role="dialog" aria-modal="true" aria-labelledby="tcfWelcomeTitle"><div class="tcf-card">
 <div class="tcf-kicker">TRUECOSTFLOWERS · FLOWER LAB</div><h2 id="tcfWelcomeTitle">СОЗДАЙ СВОЙ БУКЕТ САМ</h2>
 <p>Выбери удобный способ сборки, затем основу — и сразу приступай к цветам.</p>
