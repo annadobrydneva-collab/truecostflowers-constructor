@@ -7,7 +7,7 @@
  */
 (function(root){
 'use strict';
-var VERSION='0.4.0';
+var VERSION='0.5.0';
 var ROLE={anthurium:'accent',ranunculus:'focal',peony:'focal',
  eucalyptus:'foliage',corylus:'branch',orchid2:'accent',dahlia2:'mass',
  amaranth2:'trailing',lisianthus:'filler',delphinium:'spike',hydrangea:'mass'};
@@ -16,17 +16,25 @@ function mean(a){return a.length?a.reduce(function(s,n){return s+n;},0)/a.length
 function score(n){return Math.round(clamp(n,0,100));}
 function role(f,catalog){return ROLE[(catalog[f.idx]||{}).type]||'filler';}
 function copyLayout(flowers){return flowers.map(function(f){return Object.assign({},f);});}
+// RC44: floristic structure materials belong behind the important blooms.
 function enforceAutoDepth(flowers,catalog){
- var back=0,front=0,orchid=0;
- flowers.forEach(function(f){
-  var r=role(f,catalog);
-  if(r==='branch')f.depth=.12+(back++%80)*.001;
-  else if(r==='spike')f.depth=.72+(back++%80)*.001;
- });
+ var branch=[],background=[],cascade=[],accent=[];
  flowers.forEach(function(f){
   var kind=(catalog[f.idx]||{}).type;
-  if(kind==='orchid2')f.depth=16+(orchid++%80)*.001;
-  else if(kind==='anthurium')f.depth=12+(front++%80)*.001;
+  if(kind==='corylus'||kind==='delphinium')branch.push(f);
+  else if(kind==='hydrangea'||kind==='eucalyptus'||kind==='foliage')background.push(f);
+  else if(kind==='amaranth2')cascade.push(f);
+  else accent.push(f);
+ });
+ branch.forEach(function(f,i){f.depth=.1+i*.0005;});
+ background.forEach(function(f,i){f.depth=.45+i*.0005;});
+ cascade.forEach(function(f,i){f.depth=5+i*.0005;});
+ accent.sort(function(a,b){
+  return ((catalog[a.idx]||{}).p||0)-((catalog[b.idx]||{}).p||0)||a.id-b.id;
+ });
+ accent.forEach(function(f,i){
+  var kind=(catalog[f.idx]||{}).type;
+  f.depth=(kind==='orchid2'?23:kind==='anthurium'?19:7)+i*.012;
  });
 }
 function evaluate(input){
