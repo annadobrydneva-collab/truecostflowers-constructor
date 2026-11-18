@@ -1073,7 +1073,7 @@ function saveUndoState(){
  updateUndoButton();
 }
 function restoreHistory(saved){
- const previousQuantity=flowers.length;
+ const previousQuantity=flowers.length,previousFormat=formatChoice;
  flowers=saved.flowers.map(f=>({...f}));
  selected=saved.selected;locked=saved.locked;next=saved.next;
  formatChoice=saved.formatChoice;flowMode=saved.flowMode;budgetAmount=saved.budgetAmount;
@@ -1084,7 +1084,7 @@ function restoreHistory(saved){
  autoArrangementSerial=saved.autoArrangementSerial;
  stage.dataset.format=formatChoice;budgetOverHandled=budgetPopupDismissed;$('#tcfBudgetOver').hidden=true;touchEdit=null;gesture=null;stemDrag=null;
  lastTap={id:null,time:0};$('#picker').classList.remove('show');
- if(compositionShape==='round'&&previousQuantity!==flowers.length&&flowers.length)auto(false);
+ if(compositionShape==='round'&&(previousQuantity!==flowers.length||previousFormat!==formatChoice)&&flowers.length)auto(false);
  else render();
 }
 function undoLast(){
@@ -2430,8 +2430,8 @@ function changeFormat(direction){
  saveUndoState();
  applyFormatStemPolicy(formatChoice,nextKind);
  minBudgetOrderAttempted=false;formatChoice=nextKind;stage.dataset.format=nextKind;
- // Do not change positions, depths, stems, total flowers or geometry.
- render();
+ // A circular crown must follow the new foundation's actual upper rim.
+ if(compositionShape==='round'&&flowers.length)auto(false);else render();
 }
 function selectFormat(kind){
  if(kind==='box')kind='miniBox'; // Single hatbox card defaults to mini size; user can change it below.
@@ -2439,7 +2439,8 @@ function selectFormat(kind){
  if(hadCompletedSetup&&kind!==formatChoice)saveUndoState();
  applyFormatStemPolicy(formatChoice,kind);
  minBudgetOrderAttempted=false;formatChoice=kind;stage.dataset.format=kind;hadCompletedSetup=true;
- showSetup('editor');render();
+ showSetup('editor');
+ if(compositionShape==='round'&&flowers.length)auto(false);else render();
 }
 
 const financeCorner=$('#tcfFinanceCorner'),overPopup=$('#tcfBudgetOver');
@@ -2574,7 +2575,7 @@ $('#items').addEventListener('change',event=>{
   if(!['miniBox','box'].includes(kind)||kind===formatChoice)return;
   saveUndoState();applyFormatStemPolicy(formatChoice,kind);
   formatChoice=kind;stage.dataset.format=kind;
-  render();return;
+  if(compositionShape==='round'&&flowers.length)auto(false);else render();return;
  }
  if(event.target.id==='boxHeightSelector'){
   if(!['low','high'].includes(event.target.value)||event.target.value===boxHeightStyle)return;
