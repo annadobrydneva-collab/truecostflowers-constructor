@@ -324,3 +324,5 @@ QA: дельфиниум 3/5/10, корилус 5/10 (круглая), пять 
 Тест: https://annadobrydneva-collab.github.io/truecostflowers-constructor/preview-v3.html?v=3.2-rc49
 
 Откат: RC48 HTML blob `f7a7621021c3102d368f67162bbe3d39d8df737e`, florist-rules.js v0.6 остаётся без изменений, main/index.html RC3 не трогаем.
+
+**RC49 финальная поправка:** верхняя/нижняя группировка раскидистых ветвей распространяется на любые новые товары с `morphology='branch'`, а не только на нынешний корилус. Испытаны 5 ветвей с распределением 3 выше/2 ниже.
