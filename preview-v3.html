@@ -1782,7 +1782,7 @@ function auto(record=true){
  // the fan opens above it and always lies BEHIND the other stems.
  tall.forEach(([idx,members],kind)=>{
   const sorted=[...members].sort((a,b)=>a.id-b.id);
-  const corylus=data[idx]?.type==='corylus'||idx===4;
+  const corylus=flowerProfile(idx).morphology==='branch';
   if(corylus){
    const onLeft=flip,side=onLeft?-1:1;
    const mouthY=h-(stage.dataset?.format==='box'?241:stage.dataset?.format==='basket'?218:
