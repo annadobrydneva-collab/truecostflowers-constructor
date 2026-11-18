@@ -7,23 +7,62 @@
  */
 (function(root){
 'use strict';
-var VERSION='0.5.0';
-var ROLE={anthurium:'accent',ranunculus:'focal',peony:'focal',
- eucalyptus:'foliage',corylus:'branch',orchid2:'accent',dahlia2:'mass',
- amaranth2:'trailing',lisianthus:'filler',delphinium:'spike',hydrangea:'mass'};
+var VERSION='0.6.0';
+// RC48 central profiles for all flower entries: never use catalog indices.
+var LEGACY={
+ anthurium:['round','accent',32,65,true],ranunculus:['round','focal',34,72,false],
+ peony:['round','focal',39,72,false],eucalyptus:['foliage','foliage',21,100,false],
+ corylus:['branch','branch',10,115,false],orchid2:['round','accent',30,97,true],
+ dahlia2:['round','mass',38,76,false],amaranth2:['cascade','trailing',14,108,false],
+ lisianthus:['round','filler',29,88,false],delphinium:['line','spike',14,104,false],
+ hydrangea:['round','mass',36,74,false]
+};
+function classifyFlower(d){
+ d=d||{};
+ var name=(String(d.type||'')+' '+String(d.n||d.name||'')+' '+String(d.category||'')+' '+
+  (Array.isArray(d.tags)?d.tags.join(' '):'')).toLowerCase();
+ var old=LEGACY[d.type]||null;
+ var wanted=String(d.morphology||d.shapeCategory||d.botanicalShape||'').toLowerCase();
+ var classes=['round','line','branch','cascade','foliage'];
+ var form=classes.indexOf(wanted)>=0?wanted:null;
+ if(!form){
+  if(/корилус|corylus|ветк|branch|twig/.test(name))form='branch';
+  else if(/дельфиниум|антирринум|львиный зев|delphinium|antirrhinum|snapdragon|gladiol|гладиолус|лиатрис|liatris|вероника|veronica|наперстянк|foxglove/.test(name))form='line';
+  else if(/амарант|amaranth|каскад|cascade|trailing/.test(name))form='cascade';
+  else if(/эвкалипт|писташ|зелень|eucalyptus|pistach|foliage|fern|папоротник|ruscus|рускус|салал|salal/.test(name))form='foliage';
+  else form=old?old[0]:'round';
+ }
+ var background=d.isBase===true||d.background===true||form==='foliage'||/hydrangea|гортензи/.test(name);
+ if(d.isBase===false||d.background===false)background=false;
+ var premium=d.premium===true||(old&&old[4])||/орхиде|orchid|антуриум|anthurium/.test(name);
+ var valid=['focal','mass','accent','filler','foliage','branch','spike','trailing'];
+ var role=String(d.floralRole||d.role||'').toLowerCase();
+ if(valid.indexOf(role)<0)
+  role=form==='branch'?'branch':form==='line'?'spike':form==='cascade'?'trailing':
+   form==='foliage'?'foliage':background?'mass':old?old[1]:'focal';
+ var radius=Number(d.visualRadiusPx);
+ if(!Number.isFinite(radius)||radius<=0)
+  radius=old&&form===old[0]?old[2]:({round:34,line:14,branch:10,cascade:14,foliage:21}[form]);
+ var bottom=Number(d.paintedBottom);
+ if(!Number.isFinite(bottom)||bottom<=0)
+  bottom=old&&form===old[0]?old[3]:({round:75,line:104,branch:115,cascade:108,foliage:100}[form]);
+ return {morphology:form,role:role,background:background,
+  premium:Boolean(premium),radiusPx:radius,paintedBottom:bottom};
+}
 function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
 function mean(a){return a.length?a.reduce(function(s,n){return s+n;},0)/a.length:0;}
 function score(n){return Math.round(clamp(n,0,100));}
-function role(f,catalog){return ROLE[(catalog[f.idx]||{}).type]||'filler';}
+function role(f,catalog){return classifyFlower(catalog[f.idx]||{}).role;}
 function copyLayout(flowers){return flowers.map(function(f){return Object.assign({},f);});}
 // RC44: floristic structure materials belong behind the important blooms.
+// Foreground/background/price priority holds for new catalog species.
 function enforceAutoDepth(flowers,catalog){
  var branch=[],background=[],cascade=[],accent=[];
  flowers.forEach(function(f){
-  var kind=(catalog[f.idx]||{}).type;
-  if(kind==='corylus'||kind==='delphinium')branch.push(f);
-  else if(kind==='hydrangea'||kind==='eucalyptus'||kind==='foliage')background.push(f);
-  else if(kind==='amaranth2')cascade.push(f);
+  var p=classifyFlower(catalog[f.idx]||{});
+  if(p.morphology==='line'||p.morphology==='branch')branch.push(f);
+  else if(p.background)background.push(f);
+  else if(p.morphology==='cascade')cascade.push(f);
   else accent.push(f);
  });
  branch.forEach(function(f,i){f.depth=.1+i*.0005;});
@@ -32,10 +71,8 @@ function enforceAutoDepth(flowers,catalog){
  accent.sort(function(a,b){
   return ((catalog[a.idx]||{}).p||0)-((catalog[b.idx]||{}).p||0)||a.id-b.id;
  });
- accent.forEach(function(f,i){
-  var kind=(catalog[f.idx]||{}).type;
-  f.depth=(kind==='orchid2'?23:kind==='anthurium'?19:7)+i*.012;
- });
+ accent.forEach(function(f,i){f.depth=
+  (classifyFlower(catalog[f.idx]||{}).premium?23:7)+i*.012;});
 }
 function evaluate(input){
  input=input||{};
@@ -158,5 +195,5 @@ function evaluate(input){
   suggestions:hints,experimental:true};
 }
 root.TCFFloristRules={version:VERSION,evaluate:evaluate,
- enforceAutoDepth:enforceAutoDepth,copyLayout:copyLayout};
+ classifyFlower:classifyFlower,enforceAutoDepth:enforceAutoDepth,copyLayout:copyLayout};
 })(typeof window!=='undefined'?window:(typeof globalThis!=='undefined'?globalThis:this));
